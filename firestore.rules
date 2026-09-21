@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User profiles collection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Dedicated Officers collection
+    match /officers/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Dedicated Vendors collection
+    match /vendors/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Central Procurements collection (Owner-based isolation)
+    match /procurements/{procurementId} {
+      allow create: if request.auth != null && request.resource.data.createdBy == request.auth.uid;
+      allow read, update, delete: if request.auth != null && resource.data.createdBy == request.auth.uid;
+    }
+
+    // Default rule: block all other collections unless explicitly allowed
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
